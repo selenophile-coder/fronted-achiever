@@ -34,6 +34,11 @@ export const TimerProvider = ({ children }) => {
   const [stopwatchRunning, setStopwatchRunning] = useState(false);
   const stopwatchIntervalRef = useRef(null);
   const lastTickRef = useRef(null);
+  const stopwatchStartRef = useRef(null);
+  const lastStopwatchSecondsRef = useRef(null);
+  const pomodoroStartRef = useRef(null);
+  const pomodoroInitialRef = useRef(null);
+  const lastSecondsRef = useRef(null);
 
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -93,26 +98,36 @@ export const TimerProvider = ({ children }) => {
 
   useEffect(() => {
     if (isRunning) {
+      pomodoroStartRef.current = Date.now();
+      pomodoroInitialRef.current = time;
+      lastSecondsRef.current = time;
+
       intervalRef.current = setInterval(() => {
-        if (timerMode === 'pomodoro' && isTickEnabled && tickAudioRef.current) {
-          tickAudioRef.current.currentTime = 0;
-          tickAudioRef.current.play().catch(() => {});
-        }
-        setTime(prev => {
-          if (prev <= 1) {
+        const elapsedSeconds = Math.floor((Date.now() - pomodoroStartRef.current) / 1000);
+        const newTime = Math.max(0, pomodoroInitialRef.current - elapsedSeconds);
+
+        if (newTime !== lastSecondsRef.current) {
+          lastSecondsRef.current = newTime;
+
+          if (newTime <= 0) {
             clearInterval(intervalRef.current);
             setIsRunning(false);
             audioRef.current?.play().catch(() => {});
             if (mode === 'deepWork') incrementSession();
-            return 0;
+          } else {
+            if (timerMode === 'pomodoro' && isTickEnabled && tickAudioRef.current) {
+              tickAudioRef.current.currentTime = 0;
+              tickAudioRef.current.play().catch(() => {});
+            }
           }
-          return prev - 1;
-        });
-      }, 1000);
+          setTime(newTime);
+        }
+      }, 100);
     } else {
       clearInterval(intervalRef.current);
     }
     return () => clearInterval(intervalRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRunning, mode, timerMode, isTickEnabled]);
 
   useEffect(() => {
@@ -143,23 +158,32 @@ export const TimerProvider = ({ children }) => {
     }
     if (stopwatchRunning) return;
     setStopwatchRunning(true);
-    lastTickRef.current = Date.now();
-    stopwatchIntervalRef.current = setInterval(() => {
-      const now = Date.now();
-      const delta = now - lastTickRef.current;
-      setStopwatchTime(prev => {
-        const newTime = prev + delta;
-        if (Math.floor(newTime / 1000) > Math.floor(prev / 1000)) {
+  };
+
+  useEffect(() => {
+    if (stopwatchRunning) {
+      stopwatchStartRef.current = Date.now() - stopwatchTime;
+      lastStopwatchSecondsRef.current = Math.floor(stopwatchTime / 1000);
+
+      stopwatchIntervalRef.current = setInterval(() => {
+        const elapsedMs = Date.now() - stopwatchStartRef.current;
+        const currentSeconds = Math.floor(elapsedMs / 1000);
+
+        if (currentSeconds > lastStopwatchSecondsRef.current) {
+          lastStopwatchSecondsRef.current = currentSeconds;
           if (timerMode === 'stopwatch' && isTickEnabled && tickAudioRef.current) {
             tickAudioRef.current.currentTime = 0;
             tickAudioRef.current.play().catch(() => {});
           }
         }
-        return newTime;
-      });
-      lastTickRef.current = now;
-    }, 10);
-  };
+        setStopwatchTime(elapsedMs);
+      }, 10);
+    } else {
+      clearInterval(stopwatchIntervalRef.current);
+    }
+    return () => clearInterval(stopwatchIntervalRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopwatchRunning, timerMode, isTickEnabled]);
 
   const pauseStopwatch = () => {
     clearInterval(stopwatchIntervalRef.current);
