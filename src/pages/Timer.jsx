@@ -11,6 +11,9 @@ const Timer = () => {
     isTickEnabled, setIsTickEnabled, bgmAudioRef, bgmTracks
   } = useTimerContext();
 
+  const stopwatchProgress = Math.min(1, stopwatchTime / 3600000);
+  const stopwatchCardWidth = 60 + stopwatchProgress * 30;
+
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -126,16 +129,26 @@ const Timer = () => {
         <div className="lg:col-span-6 order-1 lg:order-2 flex flex-col items-center w-full">
           <div className="relative flex items-center justify-center mb-8 lg:mb-section-gap w-full">
             <svg viewBox="0 0 400 400" className="w-64 h-64 md:w-80 md:h-80 lg:w-[400px] lg:h-[400px] max-w-full -rotate-90">
-              <circle cx="200" cy="200" r={radius} fill="none" className="text-surface-bright" stroke="currentColor" strokeWidth="12" />
-              <circle
-                cx="200" cy="200" r={radius} fill="none" className="text-primary" stroke="currentColor" strokeWidth="12"
-                strokeLinecap="round"
-                strokeDasharray={`${circumference} ${circumference}`}
-                strokeDashoffset={strokeDashoffset}
-                style={{ transition: isRunning ? 'stroke-dashoffset 1s linear' : 'none' }}
-              />
+              {timerMode === 'pomodoro' && (
+                <>
+                  <circle cx="200" cy="200" r={radius} fill="none" className="text-surface-bright" stroke="currentColor" strokeWidth="12" />
+                  <circle
+                    cx="200" cy="200" r={radius} fill="none" className="text-primary" stroke="currentColor" strokeWidth="12"
+                    strokeLinecap="round"
+                    strokeDasharray={`${circumference} ${circumference}`}
+                    strokeDashoffset={strokeDashoffset}
+                    style={{ transition: isRunning ? 'stroke-dashoffset 1s linear' : 'none' }}
+                  />
+                </>
+              )}
             </svg>
-            <div className="absolute flex flex-col items-center">
+            {timerMode === 'stopwatch' && (
+              <div 
+                style={{ width: `${stopwatchCardWidth}%` }}
+                className="absolute inset-0 m-auto h-[50%] bg-white/60 backdrop-blur-md border border-primary/30 rounded-2xl pointer-events-none shadow-sm shadow-primary/10"
+              />
+            )}
+            <div className="absolute flex flex-col items-center z-10">
               <span className="font-headline-xl text-5xl md:text-7xl lg:text-[100px] text-primary leading-none tracking-tighter w-full text-center flex justify-center">
                 {timerMode === 'pomodoro' ? formatTime(time) : renderStopwatch(stopwatchTime)}
               </span>
