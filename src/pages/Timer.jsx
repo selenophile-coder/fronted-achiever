@@ -11,8 +11,11 @@ const Timer = () => {
     isTickEnabled, setIsTickEnabled, bgmAudioRef, bgmTracks
   } = useTimerContext();
 
+  const hasHours = stopwatchTime >= 3600000;
   const stopwatchProgress = Math.min(1, stopwatchTime / 3600000);
-  const stopwatchCardWidth = 60 + stopwatchProgress * 30;
+  const stopwatchCardWidth = hasHours
+    ? 88 + Math.min(1, (stopwatchTime - 3600000) / 3600000) * 7
+    : 80 + stopwatchProgress * 15;
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -38,10 +41,19 @@ const Timer = () => {
       mainTime = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
+    const hasHours = ms >= 3600000;
+    const mainTimeClass = hasHours
+      ? "text-3xl md:text-5xl lg:text-[70px]"
+      : "text-4xl md:text-6xl lg:text-[85px]";
+
+    const millisClass = hasHours
+      ? "text-2xl md:text-3xl lg:text-[40px]"
+      : "text-3xl md:text-4xl lg:text-[50px]";
+
     return (
       <span className="flex items-baseline justify-center">
-        <span>{mainTime}</span>
-        <span className="text-4xl md:text-5xl lg:text-[60px] text-on-surface-variant font-normal">.{millis.toString().padStart(2, '0')}</span>
+        <span className={mainTimeClass}>{mainTime}</span>
+        <span className={`${millisClass} text-on-surface-variant font-normal`}>.{millis.toString().padStart(2, '0')}</span>
       </span>
     );
   };
@@ -128,33 +140,37 @@ const Timer = () => {
         {/* Center Column: The Clock */}
         <div className="lg:col-span-6 order-1 lg:order-2 flex flex-col items-center w-full">
           <div className="relative flex items-center justify-center mb-8 lg:mb-section-gap w-full">
-            <svg viewBox="0 0 400 400" className="w-64 h-64 md:w-80 md:h-80 lg:w-[400px] lg:h-[400px] max-w-full -rotate-90">
-              {timerMode === 'pomodoro' && (
-                <>
-                  <circle cx="200" cy="200" r={radius} fill="none" className="text-surface-bright" stroke="currentColor" strokeWidth="12" />
-                  <circle
-                    cx="200" cy="200" r={radius} fill="none" className="text-primary" stroke="currentColor" strokeWidth="12"
-                    strokeLinecap="round"
-                    strokeDasharray={`${circumference} ${circumference}`}
-                    strokeDashoffset={strokeDashoffset}
-                    style={{ transition: isRunning ? 'stroke-dashoffset 1s linear' : 'none' }}
-                  />
-                </>
+            <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-[400px] lg:h-[400px] flex items-center justify-center">
+              <svg viewBox="0 0 400 400" className="w-full h-full max-w-full -rotate-90">
+                {timerMode === 'pomodoro' && (
+                  <>
+                    <circle cx="200" cy="200" r={radius} fill="none" className="text-surface-bright" stroke="currentColor" strokeWidth="12" />
+                    <circle
+                      cx="200" cy="200" r={radius} fill="none" className="text-primary" stroke="currentColor" strokeWidth="12"
+                      strokeLinecap="round"
+                      strokeDasharray={`${circumference} ${circumference}`}
+                      strokeDashoffset={strokeDashoffset}
+                      style={{ transition: isRunning ? 'stroke-dashoffset 1s linear' : 'none' }}
+                    />
+                  </>
+                )}
+              </svg>
+              {timerMode === 'stopwatch' && (
+                <div 
+                  style={{ width: `${stopwatchCardWidth}%` }}
+                  className="absolute inset-0 m-auto h-[50%] bg-white/60 backdrop-blur-md border border-primary/30 rounded-2xl pointer-events-none shadow-sm shadow-primary/10"
+                />
               )}
-            </svg>
-            {timerMode === 'stopwatch' && (
-              <div 
-                style={{ width: `${stopwatchCardWidth}%` }}
-                className="absolute inset-0 m-auto h-[50%] bg-white/60 backdrop-blur-md border border-primary/30 rounded-2xl pointer-events-none shadow-sm shadow-primary/10"
-              />
-            )}
-            <div className="absolute flex flex-col items-center z-10">
-              <span className="font-headline-xl text-5xl md:text-7xl lg:text-[100px] text-primary leading-none tracking-tighter w-full text-center flex justify-center">
-                {timerMode === 'pomodoro' ? formatTime(time) : renderStopwatch(stopwatchTime)}
-              </span>
-              <span className="font-label-md text-xs md:text-sm lg:text-label-md text-outline uppercase tracking-[0.2em] mt-2">
-                {timerMode === 'pomodoro' ? (mode === 'deepWork' ? 'Focusing' : (mode === 'custom' ? 'Custom Timer' : 'Break Time')) : 'Stopwatch'}
-              </span>
+              <div className="absolute flex flex-col items-center z-10 whitespace-nowrap">
+                <span className={`font-headline-xl text-primary leading-none tracking-tighter w-full text-center flex justify-center ${
+                  timerMode === 'pomodoro' ? 'text-5xl md:text-7xl lg:text-[100px]' : ''
+                }`}>
+                  {timerMode === 'pomodoro' ? formatTime(time) : renderStopwatch(stopwatchTime)}
+                </span>
+                <span className="font-label-md text-xs md:text-sm lg:text-label-md text-outline uppercase tracking-[0.2em] mt-2">
+                  {timerMode === 'pomodoro' ? (mode === 'deepWork' ? 'Focusing' : (mode === 'custom' ? 'Custom Timer' : 'Break Time')) : 'Stopwatch'}
+                </span>
+              </div>
             </div>
           </div>
           
