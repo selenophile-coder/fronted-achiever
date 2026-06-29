@@ -186,7 +186,7 @@ const Home = () => {
                 <input
                   required
                   className="bg-surface-bright border border-surface-variant rounded-lg p-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  placeholder="e.g., Sher Jahan"
+                  placeholder="e.g., User Name"
                   value={enquiryData.name}
                   onChange={(e) => setEnquiryData({ ...enquiryData, name: e.target.value })}
                 />
@@ -207,7 +207,7 @@ const Home = () => {
                   required
                   type="tel"
                   className="bg-surface-bright border border-surface-variant rounded-lg p-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  placeholder="+91 9999-111-0000"
+                  placeholder="+91 999-XXX-000"
                   value={enquiryData.contact}
                   onChange={(e) => setEnquiryData({ ...enquiryData, contact: e.target.value })}
                 />
